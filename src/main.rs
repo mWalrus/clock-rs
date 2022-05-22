@@ -1,8 +1,15 @@
 use anyhow::Result;
 use chrono::prelude::*;
+use cursive::direction::Orientation;
+use cursive::event::Event;
+use cursive::theme::BaseColor::*;
+use cursive::theme::Color::*;
+use cursive::theme::PaletteColor::*;
+use cursive::theme::*;
+use cursive::views::LinearLayout;
 use cursive::{
     reexports::enumset::enum_set,
-    theme::{Color, ColorStyle, Effect, Style, Theme},
+    theme::{Color, ColorStyle, Effect, Palette, Style, Theme},
     views::{FixedLayout, TextView},
     Cursive, Rect,
 };
@@ -20,6 +27,35 @@ struct Digit {
     s: Vec<Style>,
 }
 
+struct Colon {
+    a: Rect,
+    b: Rect,
+    s: Style,
+}
+
+impl Colon {
+    fn new(anchor: (usize, usize)) -> Self {
+        let style = Style {
+            effects: enum_set!(Effect::Simple),
+            color: ColorStyle {
+                front: Color::Dark(Green).into(),
+                back: Color::Dark(Green).into(),
+            },
+        };
+        Self {
+            a: Rect::from_size((anchor.0 + 1, anchor.1 + 3), (2, 2)),
+            b: Rect::from_size((anchor.0 + 1, anchor.1 + 9), (2, 2)),
+            s: style,
+        }
+    }
+
+    fn layout(&self) -> FixedLayout {
+        FixedLayout::new()
+            .child(self.a, TextView::new("  ").style(self.s))
+            .child(self.b, TextView::new("  ").style(self.s))
+    }
+}
+
 impl Digit {
     fn new(anchor: (usize, usize), digit: u8) -> Self {
         // https://en.wikipedia.org/wiki/Seven-segment_display#/media/File:7_Segment_Display_with_Labeled_Segments.svg
@@ -29,9 +65,9 @@ impl Digit {
         let mut styles: Vec<Style> = Vec::new();
         for i in (0..7).rev() {
             let color = if ((digit >> i) & 1) == 1 {
-                Color::Rgb(255, 0, 0)
+                Color::Dark(Green)
             } else {
-                Color::Rgb(255, 255, 255)
+                Color::Dark(Black)
             };
 
             let style = Style {
@@ -54,8 +90,8 @@ impl Digit {
             s: styles,
         }
     }
-    fn draw(&self, siv: &mut Cursive) {
-        let layout = FixedLayout::new()
+    fn layout(&self) -> FixedLayout {
+        FixedLayout::new()
             .child(
                 self.a,
                 TextView::new(" ".repeat(self.a.width())).style(self.s[0]),
@@ -83,19 +119,22 @@ impl Digit {
             .child(
                 self.g,
                 TextView::new(" ".repeat(self.g.width())).style(self.s[6]),
-            );
-        siv.add_fullscreen_layer(layout);
+            )
     }
 }
 
 fn main() -> Result<()> {
+    let mut palette = Palette::default();
+    palette[Background] = TerminalDefault;
+    palette[View] = TerminalDefault;
+
     let mut siv = cursive::default();
     siv.set_theme(Theme {
         shadow: false,
+        palette,
         ..Default::default()
     });
     siv.add_global_callback('q', |s| s.quit());
-    siv.set_fps(10);
     ui(&mut siv);
     siv.run();
     Ok(())
@@ -110,11 +149,25 @@ fn ui(siv: &mut Cursive) {
         HEX_CODES[digits.3],
     );
 
-    // NOTE: draw in reverse order to not render them over each other
-    Digit::new((48, 0), m2).draw(siv);
-    Digit::new((32, 0), m1).draw(siv);
-    Digit::new((16, 0), h2).draw(siv);
-    Digit::new((0, 0), h1).draw(siv);
+    // digit:
+    // width = 12
+    // height = 23 (not important)
+    // i wanna shift each digit by 13
+    // and i wanna leave space in the middle for the colon
+
+    let d1_layout = Digit::new((2, 0), m2).layout();
+    let d2_layout = Digit::new((2, 0), m1).layout();
+    let colon_layout = Colon::new((1, 0)).layout();
+    let d3_layout = Digit::new((2, 0), h2).layout();
+    let d4_layout = Digit::new((0, 0), h1).layout();
+
+    let linear_layout = LinearLayout::new(Orientation::Horizontal)
+        .child(d4_layout)
+        .child(d3_layout)
+        .child(colon_layout)
+        .child(d2_layout)
+        .child(d1_layout);
+    siv.add_layer(linear_layout);
 }
 
 fn take_digits() -> (usize, usize, usize, usize) {
