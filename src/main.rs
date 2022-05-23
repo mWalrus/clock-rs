@@ -1,5 +1,8 @@
 mod clock;
 
+use std::time::Duration;
+use std::time::Instant;
+
 use anyhow::Result;
 use clock::Clock;
 use cursive::theme::Color::*;
@@ -24,9 +27,12 @@ fn main() -> Result<()> {
     siv.add_global_callback('q', |s| s.quit());
 
     siv.set_fps(FPS);
-    // step the event loop manually
-    let mut fps_counter: u32 = 0;
+
+    let tick_rate = Duration::from_millis(1000);
+
     let mut clock = Clock::new();
+
+    let mut last_tick = Instant::now();
     loop {
         siv.add_layer(clock.layout());
         if !siv.is_running() {
@@ -35,12 +41,11 @@ fn main() -> Result<()> {
         siv.step();
         siv.pop_layer();
 
-        if fps_counter == FPS {
+        if last_tick.elapsed() >= tick_rate {
             clock.toggle_colon();
-            fps_counter = 0;
-        } else {
-            fps_counter += 1;
+            last_tick = Instant::now();
         }
+
         clock.update();
     }
     Ok(())
