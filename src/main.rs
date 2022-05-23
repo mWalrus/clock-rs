@@ -7,6 +7,8 @@ use cursive::theme::PaletteColor::*;
 use cursive::theme::{Palette, Theme};
 use cursive::CursiveRunnable;
 
+const FPS: u32 = 30;
+
 fn main() -> Result<()> {
     let mut palette = Palette::default();
     palette[Background] = TerminalDefault;
@@ -20,10 +22,11 @@ fn main() -> Result<()> {
         ..Default::default()
     });
     siv.add_global_callback('q', |s| s.quit());
-    siv.set_fps(30);
+
+    siv.set_fps(FPS);
     // step the event loop manually
     let mut colon_on = true;
-    let mut fps_counter: u8 = 0;
+    let mut fps_counter: u32 = 0;
     loop {
         let clock_layout = Clock::new(colon_on).layout();
         siv.add_layer(clock_layout);
@@ -33,7 +36,7 @@ fn main() -> Result<()> {
         siv.step();
         siv.pop_layer();
 
-        if fps_counter == 30 {
+        if fps_counter == FPS {
             colon_on = !colon_on;
             fps_counter = 0;
         } else {
