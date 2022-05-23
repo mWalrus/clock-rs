@@ -7,6 +7,9 @@ use cursive::theme::Color::*;
 use cursive::theme::PaletteColor::*;
 use cursive::theme::*;
 use cursive::views::LinearLayout;
+use cursive::CursiveRunnable;
+use cursive::Printer;
+use cursive::View;
 use cursive::{
     reexports::enumset::enum_set,
     theme::{Color, ColorStyle, Effect, Palette, Style, Theme},
@@ -31,6 +34,43 @@ struct Colon {
     a: Rect,
     b: Rect,
     s: Style,
+}
+
+struct Clock {
+    d1: Digit,
+    d2: Digit,
+    cl: Colon,
+    d3: Digit,
+    d4: Digit,
+}
+
+impl Clock {
+    fn new() -> Self {
+        let digits = take_digits();
+        let (h1, h2, m1, m2) = (
+            HEX_CODES[digits.0],
+            HEX_CODES[digits.1],
+            HEX_CODES[digits.2],
+            HEX_CODES[digits.3],
+        );
+
+        Self {
+            d1: Digit::new((2, 0), m2),
+            d2: Digit::new((2, 0), m1),
+            cl: Colon::new((1, 0)),
+            d3: Digit::new((2, 0), h2),
+            d4: Digit::new((0, 0), h1),
+        }
+    }
+
+    fn layout(&self) -> LinearLayout {
+        LinearLayout::new(Orientation::Horizontal)
+            .child(self.d4.layout())
+            .child(self.d3.layout())
+            .child(self.cl.layout())
+            .child(self.d2.layout())
+            .child(self.d1.layout())
+    }
 }
 
 impl Colon {
@@ -128,46 +168,29 @@ fn main() -> Result<()> {
     palette[Background] = TerminalDefault;
     palette[View] = TerminalDefault;
 
-    let mut siv = cursive::default();
+    let siv = cursive::default();
+    let mut siv = CursiveRunnable::into_runner(siv);
     siv.set_theme(Theme {
         shadow: false,
         palette,
         ..Default::default()
     });
     siv.add_global_callback('q', |s| s.quit());
-    ui(&mut siv);
-    siv.run();
+    siv.set_fps(30);
+    // in the loop we want to:
+    // 1. clear screen
+    // 2. Define a new clock layout with the current time
+    // 3. Draw that clock layout
+    loop {
+        let clock_layout = Clock::new().layout();
+        siv.add_layer(clock_layout);
+        if !siv.is_running() {
+            break;
+        }
+        siv.step();
+        siv.pop_layer();
+    }
     Ok(())
-}
-
-fn ui(siv: &mut Cursive) {
-    let digits = take_digits();
-    let (h1, h2, m1, m2) = (
-        HEX_CODES[digits.0],
-        HEX_CODES[digits.1],
-        HEX_CODES[digits.2],
-        HEX_CODES[digits.3],
-    );
-
-    // digit:
-    // width = 12
-    // height = 23 (not important)
-    // i wanna shift each digit by 13
-    // and i wanna leave space in the middle for the colon
-
-    let d1_layout = Digit::new((2, 0), m2).layout();
-    let d2_layout = Digit::new((2, 0), m1).layout();
-    let colon_layout = Colon::new((1, 0)).layout();
-    let d3_layout = Digit::new((2, 0), h2).layout();
-    let d4_layout = Digit::new((0, 0), h1).layout();
-
-    let linear_layout = LinearLayout::new(Orientation::Horizontal)
-        .child(d4_layout)
-        .child(d3_layout)
-        .child(colon_layout)
-        .child(d2_layout)
-        .child(d1_layout);
-    siv.add_layer(linear_layout);
 }
 
 fn take_digits() -> (usize, usize, usize, usize) {
