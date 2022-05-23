@@ -37,22 +37,24 @@ pub struct Clock {
 }
 
 impl Clock {
-    pub fn new(colon_on: bool) -> Self {
-        let digits = take_digits();
-        let (h1, h2, m1, m2) = (
-            HEX_CODES[digits.0],
-            HEX_CODES[digits.1],
-            HEX_CODES[digits.2],
-            HEX_CODES[digits.3],
-        );
-
+    pub fn new() -> Self {
+        let (h1, h2, m1, m2) = take_digits();
         Self {
             d1: Digit::new((2, 0), m2),
             d2: Digit::new((2, 0), m1),
-            cl: Colon::new((1, 0), colon_on),
+            cl: Colon::new((1, 0), true),
             d3: Digit::new((2, 0), h2),
             d4: Digit::new((0, 0), h1),
         }
+    }
+
+    pub fn update(&mut self, colon_on: bool) {
+        let (h1, h2, m1, m2) = take_digits();
+        self.d1 = Digit::new((2, 0), m2);
+        self.d2 = Digit::new((2, 0), m1);
+        self.cl = Colon::new((1, 0), colon_on);
+        self.d3 = Digit::new((2, 0), h2);
+        self.d4 = Digit::new((0, 0), h1);
     }
 
     pub fn layout(&self) -> LinearLayout {
@@ -160,18 +162,18 @@ impl Digit {
     }
 }
 
-fn take_digits() -> (usize, usize, usize, usize) {
+fn take_digits() -> (u8, u8, u8, u8) {
     let time = Local::now().time().format("%H:%M").to_string();
     let (h, m) = time.split_once(':').unwrap();
     let mut h = h.chars();
     let mut m = m.chars();
     let (h1, h2) = (
-        h.next().unwrap().to_digit(10).unwrap(),
-        h.next().unwrap().to_digit(10).unwrap(),
+        h.next().unwrap().to_digit(10).unwrap() as usize,
+        h.next().unwrap().to_digit(10).unwrap() as usize,
     );
     let (m1, m2) = (
-        m.next().unwrap().to_digit(10).unwrap(),
-        m.next().unwrap().to_digit(10).unwrap(),
+        m.next().unwrap().to_digit(10).unwrap() as usize,
+        m.next().unwrap().to_digit(10).unwrap() as usize,
     );
-    (h1 as usize, h2 as usize, m1 as usize, m2 as usize)
+    (HEX_CODES[h1], HEX_CODES[h2], HEX_CODES[m1], HEX_CODES[m2])
 }

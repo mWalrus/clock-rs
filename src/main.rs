@@ -27,9 +27,9 @@ fn main() -> Result<()> {
     // step the event loop manually
     let mut colon_on = true;
     let mut fps_counter: u32 = 0;
+    let mut clock = Clock::new();
     loop {
-        let clock_layout = Clock::new(colon_on).layout();
-        siv.add_layer(clock_layout);
+        siv.add_layer(clock.layout());
         if !siv.is_running() {
             break;
         }
@@ -42,6 +42,7 @@ fn main() -> Result<()> {
         } else {
             fps_counter += 1;
         }
+        clock.update(colon_on);
     }
     Ok(())
 }
