@@ -25,7 +25,6 @@ fn main() -> Result<()> {
 
     siv.set_fps(FPS);
     // step the event loop manually
-    let mut colon_on = true;
     let mut fps_counter: u32 = 0;
     let mut clock = Clock::new();
     loop {
@@ -37,12 +36,12 @@ fn main() -> Result<()> {
         siv.pop_layer();
 
         if fps_counter == FPS {
-            colon_on = !colon_on;
+            clock.toggle_colon();
             fps_counter = 0;
         } else {
             fps_counter += 1;
         }
-        clock.update(colon_on);
+        clock.update();
     }
     Ok(())
 }

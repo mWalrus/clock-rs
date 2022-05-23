@@ -26,6 +26,7 @@ struct Colon {
     a: Rect,
     b: Rect,
     s: Style,
+    on: bool,
 }
 
 pub struct Clock {
@@ -42,19 +43,22 @@ impl Clock {
         Self {
             d1: Digit::new((2, 0), m2),
             d2: Digit::new((2, 0), m1),
-            cl: Colon::new((1, 0), true),
+            cl: Colon::new((1, 0)),
             d3: Digit::new((2, 0), h2),
             d4: Digit::new((0, 0), h1),
         }
     }
 
-    pub fn update(&mut self, colon_on: bool) {
+    pub fn update(&mut self) {
         let (h1, h2, m1, m2) = take_digits();
         self.d1 = Digit::new((2, 0), m2);
         self.d2 = Digit::new((2, 0), m1);
-        self.cl = Colon::new((1, 0), colon_on);
         self.d3 = Digit::new((2, 0), h2);
         self.d4 = Digit::new((0, 0), h1);
+    }
+
+    pub fn toggle_colon(&mut self) {
+        self.cl.toggle();
     }
 
     pub fn layout(&self) -> LinearLayout {
@@ -68,24 +72,29 @@ impl Clock {
 }
 
 impl Colon {
-    fn new(anchor: (usize, usize), on: bool) -> Self {
-        let color = if on {
-            Color::Dark(Green)
-        } else {
-            Color::Dark(Black)
-        };
+    fn new(anchor: (usize, usize)) -> Self {
         let style = Style {
-            effects: enum_set!(Effect::Blink),
+            effects: enum_set!(Effect::Simple),
             color: ColorStyle {
-                front: color.into(),
-                back: color.into(),
+                front: Color::TerminalDefault.into(),
+                back: Color::Dark(Green).into(),
             },
         };
         Self {
             a: Rect::from_size((anchor.0 + 1, anchor.1 + 3), (2, 2)),
             b: Rect::from_size((anchor.0 + 1, anchor.1 + 9), (2, 2)),
             s: style,
+            on: false,
         }
+    }
+
+    fn toggle(&mut self) {
+        self.s.color.back = if self.on {
+            Color::Dark(Green).into()
+        } else {
+            Color::Dark(Black).into()
+        };
+        self.on = !self.on
     }
 
     fn layout(&self) -> FixedLayout {
