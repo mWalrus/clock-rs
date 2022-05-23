@@ -7,7 +7,7 @@ use cursive::theme::PaletteColor::*;
 use cursive::theme::{Palette, Theme};
 use cursive::CursiveRunnable;
 
-const FPS: u32 = 30;
+const FPS: u32 = 27;
 
 fn main() -> Result<()> {
     let mut palette = Palette::default();
