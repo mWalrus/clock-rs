@@ -9,7 +9,7 @@ use cursive::CursiveRunnable;
 use std::time::Duration;
 use std::time::Instant;
 
-const FPS: u32 = 27;
+const FPS: u32 = 30;
 
 fn main() -> Result<()> {
     let mut palette = Palette::default();
