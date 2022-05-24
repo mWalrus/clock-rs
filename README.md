@@ -5,7 +5,7 @@ A seven-segment clock with a TUI frontend using [cursive](https://github.com/gys
 
 :)
 
-## Prerequisits
+## Prerequisites
 - rust & cargo
 - cargo-make
 
