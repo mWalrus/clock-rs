@@ -77,7 +77,7 @@ impl Colon {
             effects: enum_set!(Effect::Simple),
             color: ColorStyle {
                 front: Color::TerminalDefault.into(),
-                back: Color::Dark(Green).into(),
+                back: Color::Dark(Green).into(), // on color
             },
         };
         Self {
@@ -90,7 +90,7 @@ impl Colon {
 
     fn toggle(&mut self) {
         self.s.color.back = if self.on {
-            Color::Dark(Green).into()
+            Color::Dark(Green).into() // on color
         } else {
             Color::Dark(Black).into()
         };

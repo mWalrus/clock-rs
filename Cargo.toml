@@ -8,4 +8,4 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.57"
 chrono = "0.4.19"
-cursive = "0.18.0"
+cursive = { version = "0.18.0", features = ["toml"] }
