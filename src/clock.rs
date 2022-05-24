@@ -11,6 +11,10 @@ use cursive::{
 
 const HEX_CODES: &'static [u8] = &[0x7E, 0x30, 0x6D, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B];
 
+// change these to whatever you like
+const ON_COLOR: Color = Color::Dark(Magenta);
+const OFF_COLOR: Color = Color::Dark(Black);
+
 struct Digit {
     a: Rect,
     b: Rect,
@@ -77,7 +81,7 @@ impl Colon {
             effects: enum_set!(Effect::Simple),
             color: ColorStyle {
                 front: Color::TerminalDefault.into(),
-                back: Color::Dark(Green).into(), // on color
+                back: ON_COLOR.into(),
             },
         };
         Self {
@@ -90,9 +94,9 @@ impl Colon {
 
     fn toggle(&mut self) {
         self.s.color.back = if self.on {
-            Color::Dark(Green).into() // on color
+            ON_COLOR.into()
         } else {
-            Color::Dark(Black).into()
+            OFF_COLOR.into()
         };
         self.on = !self.on
     }
@@ -113,9 +117,9 @@ impl Digit {
         let mut styles: Vec<Style> = Vec::new();
         for i in (0..7).rev() {
             let color = if ((digit >> i) & 1) == 1 {
-                Color::Dark(Green)
+                ON_COLOR
             } else {
-                Color::Dark(Black)
+                OFF_COLOR
             };
 
             let style = Style {
