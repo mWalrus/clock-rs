@@ -1,6 +1,6 @@
+use crate::{HEX_CODES, OFF_COLOR, ON_COLOR, SEGMENTS};
 use chrono::prelude::*;
 use cursive::direction::Orientation;
-use cursive::theme::BaseColor::*;
 use cursive::views::LinearLayout;
 use cursive::{
     reexports::enumset::enum_set,
@@ -8,13 +8,6 @@ use cursive::{
     views::{FixedLayout, TextView},
     Rect,
 };
-
-const HEX_CODES: &'static [u8] = &[0x7E, 0x30, 0x6D, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B];
-const SEGMENTS: usize = 7;
-
-// change these to whatever you like
-const ON_COLOR: Color = Color::Dark(Magenta);
-const OFF_COLOR: Color = Color::Dark(Black);
 
 struct Digit {
     a: Rect,
