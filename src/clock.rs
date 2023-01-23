@@ -10,6 +10,7 @@ use cursive::{
 };
 
 const HEX_CODES: &'static [u8] = &[0x7E, 0x30, 0x6D, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B];
+const SEGMENTS: usize = 7;
 
 // change these to whatever you like
 const ON_COLOR: Color = Color::Dark(Magenta);
@@ -55,10 +56,10 @@ impl Clock {
 
     pub fn update(&mut self) {
         let (h1, h2, m1, m2) = take_digits();
-        self.d1 = Digit::new((2, 0), m2);
-        self.d2 = Digit::new((2, 0), m1);
-        self.d3 = Digit::new((2, 0), h2);
-        self.d4 = Digit::new((0, 0), h1);
+        self.d1.update(m2);
+        self.d2.update(m1);
+        self.d3.update(h2);
+        self.d4.update(h1);
     }
 
     pub fn toggle_colon(&mut self) {
@@ -113,8 +114,23 @@ impl Digit {
         // https://en.wikipedia.org/wiki/Seven-segment_display#/media/File:7_Segment_Display_with_Labeled_Segments.svg
         // for ordering
 
-        // POG
-        let mut styles: Vec<Style> = Vec::new();
+        let mut dgt = Self {
+            a: Rect::from_size((anchor.0 + 2, anchor.1 + 0), (10, 1)),
+            b: Rect::from_size((anchor.0 + 12, anchor.1 + 1), (2, 10)),
+            c: Rect::from_size((anchor.0 + 12, anchor.1 + 7), (2, 10)),
+            d: Rect::from_size((anchor.0 + 2, anchor.1 + 12), (10, 1)),
+            e: Rect::from_size((anchor.0 + 0, anchor.1 + 7), (2, 10)),
+            f: Rect::from_size((anchor.0 + 0, anchor.1 + 1), (2, 10)),
+            g: Rect::from_size((anchor.0 + 2, anchor.1 + 6), (10, 1)),
+            s: Vec::with_capacity(SEGMENTS),
+        };
+        dgt.update(digit);
+        dgt
+    }
+
+    fn update(&mut self, digit: u8) {
+        self.s.clear();
+
         for i in (0..7).rev() {
             let color = if ((digit >> i) & 1) == 1 {
                 ON_COLOR
@@ -129,19 +145,10 @@ impl Digit {
                     back: color.into(),
                 },
             };
-            styles.push(style);
-        }
-        Self {
-            a: Rect::from_size((anchor.0 + 2, anchor.1 + 0), (10, 1)),
-            b: Rect::from_size((anchor.0 + 12, anchor.1 + 1), (2, 10)),
-            c: Rect::from_size((anchor.0 + 12, anchor.1 + 7), (2, 10)),
-            d: Rect::from_size((anchor.0 + 2, anchor.1 + 12), (10, 1)),
-            e: Rect::from_size((anchor.0 + 0, anchor.1 + 7), (2, 10)),
-            f: Rect::from_size((anchor.0 + 0, anchor.1 + 1), (2, 10)),
-            g: Rect::from_size((anchor.0 + 2, anchor.1 + 6), (10, 1)),
-            s: styles,
+            self.s.push(style);
         }
     }
+
     fn layout(&self) -> FixedLayout {
         FixedLayout::new()
             .child(
