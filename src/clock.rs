@@ -9,6 +9,8 @@ use cursive::{
     Rect,
 };
 
+type IsActive = bool;
+
 struct Digit {
     a: Rect,
     b: Rect,
@@ -17,7 +19,8 @@ struct Digit {
     e: Rect,
     f: Rect,
     g: Rect,
-    s: Vec<Style>,
+    segment_states: Vec<IsActive>,
+    style: Style,
 }
 
 struct Colon {
@@ -43,7 +46,7 @@ impl Clock {
             d2: Digit::new((2, 0), m1),
             cl: Colon::new((1, 0)),
             d3: Digit::new((2, 0), h2),
-            d4: Digit::new((0, 0), h1),
+            d4: Digit::new((2, 0), h1),
         }
     }
 
@@ -51,8 +54,8 @@ impl Clock {
         let (h1, h2, m1, m2) = take_digits();
         self.d1.update(m2);
         self.d2.update(m1);
-        self.d3.update(h2);
-        self.d4.update(h1);
+        self.d4.update(h2);
+        self.d3.update(h1);
     }
 
     pub fn toggle_colon(&mut self) {
@@ -108,73 +111,85 @@ impl Digit {
         // for ordering
 
         let mut dgt = Self {
-            a: Rect::from_size((anchor.0 + 2, anchor.1 + 0), (10, 1)),
-            b: Rect::from_size((anchor.0 + 12, anchor.1 + 1), (2, 10)),
-            c: Rect::from_size((anchor.0 + 12, anchor.1 + 7), (2, 10)),
-            d: Rect::from_size((anchor.0 + 2, anchor.1 + 12), (10, 1)),
-            e: Rect::from_size((anchor.0 + 0, anchor.1 + 7), (2, 10)),
-            f: Rect::from_size((anchor.0 + 0, anchor.1 + 1), (2, 10)),
-            g: Rect::from_size((anchor.0 + 2, anchor.1 + 6), (10, 1)),
-            s: Vec::with_capacity(SEGMENTS),
+            a: Rect::from_size((anchor.0, anchor.1 + 0), (14, 1)),
+            b: Rect::from_size((anchor.0 + 12, anchor.1), (2, 14)),
+            c: Rect::from_size((anchor.0 + 12, anchor.1 + 6), (2, 14)),
+            d: Rect::from_size((anchor.0, anchor.1 + 12), (14, 1)),
+            e: Rect::from_size((anchor.0 + 0, anchor.1 + 6), (2, 14)),
+            f: Rect::from_size((anchor.0 + 0, anchor.1), (2, 14)),
+            g: Rect::from_size((anchor.0, anchor.1 + 6), (14, 1)),
+            segment_states: Vec::with_capacity(SEGMENTS),
+            style: Style {
+                effects: enum_set!(Effect::Simple),
+                color: ColorStyle {
+                    front: ON_COLOR.into(),
+                    back: ON_COLOR.into(),
+                },
+            },
         };
         dgt.update(digit);
         dgt
     }
 
     fn update(&mut self, digit: u8) {
-        self.s.clear();
+        self.segment_states.clear();
 
         for i in (0..7).rev() {
-            let color = if ((digit >> i) & 1) == 1 {
-                ON_COLOR
-            } else {
-                OFF_COLOR
-            };
+            let is_active = ((digit >> i) & 1) == 1;
 
-            let style = Style {
-                effects: enum_set!(Effect::Simple),
-                color: ColorStyle {
-                    front: color.into(),
-                    back: color.into(),
-                },
-            };
-            self.s.push(style);
+            self.segment_states.push(is_active);
         }
     }
 
     fn layout(&self) -> FixedLayout {
-        FixedLayout::new()
-            .child(
+        let mut layout = FixedLayout::new();
+        if self.segment_states[0] {
+            layout = layout.child(
                 self.a,
-                TextView::new(" ".repeat(self.a.width())).style(self.s[0]),
-            )
-            .child(
+                TextView::new(" ".repeat(self.a.width())).style(self.style),
+            );
+        }
+        if self.segment_states[1] {
+            layout = layout.child(
                 self.b,
-                TextView::new(" ".repeat(self.b.height())).style(self.s[1]),
-            )
-            .child(
+                TextView::new(" ".repeat(self.b.height())).style(self.style),
+            );
+        }
+        if self.segment_states[2] {
+            layout = layout.child(
                 self.c,
-                TextView::new(" ".repeat(self.c.height())).style(self.s[2]),
-            )
-            .child(
+                TextView::new(" ".repeat(self.c.height())).style(self.style),
+            );
+        }
+        if self.segment_states[3] {
+            layout = layout.child(
                 self.d,
-                TextView::new(" ".repeat(self.d.width())).style(self.s[3]),
-            )
-            .child(
+                TextView::new(" ".repeat(self.d.width())).style(self.style),
+            );
+        }
+        if self.segment_states[4] {
+            layout = layout.child(
                 self.e,
-                TextView::new(" ".repeat(self.e.height())).style(self.s[4]),
-            )
-            .child(
+                TextView::new(" ".repeat(self.e.height())).style(self.style),
+            );
+        }
+        if self.segment_states[5] {
+            layout = layout.child(
                 self.f,
-                TextView::new(" ".repeat(self.f.height())).style(self.s[5]),
-            )
-            .child(
+                TextView::new(" ".repeat(self.f.height())).style(self.style),
+            );
+        }
+        if self.segment_states[6] {
+            layout = layout.child(
                 self.g,
-                TextView::new(" ".repeat(self.g.width())).style(self.s[6]),
-            )
+                TextView::new(" ".repeat(self.g.width())).style(self.style),
+            );
+        }
+        layout
     }
 }
 
+// TODO: move this into the Clock struct
 fn take_digits() -> (u8, u8, u8, u8) {
     let time = Local::now().time().format("%H:%M").to_string();
     let (h, m) = time.split_once(':').unwrap();
