@@ -1,4 +1,4 @@
-use crate::{HEX_CODES, OFF_COLOR, ON_COLOR, SEGMENTS};
+use crate::{HEX_CODES, ON_COLOR, SEGMENTS};
 use chrono::prelude::*;
 use cursive::direction::Orientation;
 use cursive::views::LinearLayout;
@@ -26,7 +26,8 @@ struct Digit {
 struct Colon {
     a: Rect,
     b: Rect,
-    s: Style,
+    on_s: Style,
+    off_s: Style,
     on: bool,
 }
 
@@ -74,34 +75,40 @@ impl Clock {
 
 impl Colon {
     fn new(anchor: (usize, usize)) -> Self {
-        let style = Style {
+        let on_style = Style {
             effects: enum_set!(Effect::Simple),
             color: ColorStyle {
                 front: Color::TerminalDefault.into(),
                 back: ON_COLOR.into(),
             },
         };
+        let off_style = Style {
+            effects: enum_set!(Effect::Simple),
+            color: ColorStyle {
+                front: Color::TerminalDefault.into(),
+                back: Color::TerminalDefault.into(),
+            },
+        };
         Self {
             a: Rect::from_size((anchor.0 + 1, anchor.1 + 3), (2, 2)),
             b: Rect::from_size((anchor.0 + 1, anchor.1 + 9), (2, 2)),
-            s: style,
+            on_s: on_style,
+            off_s: off_style,
             on: false,
         }
     }
 
     fn toggle(&mut self) {
-        self.s.color.back = if self.on {
-            ON_COLOR.into()
-        } else {
-            OFF_COLOR.into()
-        };
         self.on = !self.on
     }
 
     fn layout(&self) -> FixedLayout {
-        FixedLayout::new()
-            .child(self.a, TextView::new("  ").style(self.s))
-            .child(self.b, TextView::new("  ").style(self.s))
+        let mut layout = FixedLayout::new();
+        let style = if self.on { self.on_s } else { self.off_s };
+        layout = layout
+            .child(self.a, TextView::new("  ").style(style))
+            .child(self.b, TextView::new("  ").style(style));
+        layout
     }
 }
 
